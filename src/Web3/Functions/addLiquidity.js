@@ -63,7 +63,7 @@ const getPoolData = async (poolContract) => {
   };
 };
 
-const addLiquidity = async () => {
+const addLiquidity = async (amountETH) => {
   const poolData = await getPoolData(poolContract);
 
   const WETH_UNI_POOL = new Pool(
@@ -114,20 +114,28 @@ const addLiquidity = async () => {
     tickUpper:
       nearestUsableTick(poolData.tick, poolData.tickSpacing) +
       poolData.tickSpacing * 2,
-    amount0Desired: ethers.utils.parseUnits("0.001", 18).toString(), // Cantidad del primer token que se va a depositar
-    amount1Desired: ethers.utils.parseUnits("0.001", 18).toString(),
+    amount0Desired: ethers.utils
+      .parseUnits(amountETH.toString(), 18)
+      .toString(), // Cantidad del primer token que se va a depositar
+    amount1Desired: ethers.utils
+      .parseUnits(amountETH.toString(), 18)
+      .toString(),
     amount0Min: amount0Desired.toString(),
     amount1Min: amount1Desired.toString(),
     recipient: WALLET_ADDRESS,
     deadline: Math.floor(Date.now() / 1000) + 60 * 10,
   };
 
-  nonfungiblePositionManagerContract
+  let response;
+
+  await nonfungiblePositionManagerContract
     .connect(connectedWallet)
     .mint(params, { gasLimit: ethers.utils.hexlify(1000000) })
     .then((res) => {
-      console.log("Adding", res);
+      response = res;
     });
+
+  return response;
 };
 
 export default addLiquidity;

@@ -1,23 +1,19 @@
 import React, { useState } from "react";
-import { ethers } from "ethers";
-import addLiquidity from "./Web3/Functions/addLiquidity";
+import AmountETHInput from "./Components/AmountETHInput/AmountETHInput";
+import FunctionButtonsGroup from "./Components/FunctionButtonsGroup/FunctionButtonsGroup";
+import PoolIdInput from "./Components/PoolIdInput/PoolIdInput";
 
 function App() {
   const [connectedState, setConnectedState] = useState("Connet Wallet");
+  const [poolId, setPoolId] = useState(undefined);
+  const [amountETH, setAmountETH] = useState(0);
 
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  let getPoolId = (id) => {
+    setPoolId(id);
+  };
 
-  const add = async () => {
-    if (typeof window.ethereum !== "undefined") {
-      try {
-        const txResponse = await addLiquidity();
-        await listenerForTxMine(txResponse, provider);
-        console.log("Done");
-        setShowBalance(false);
-      } catch (error) {
-        console.log(error);
-      }
-    }
+  let getAmountETH = (amount) => {
+    setAmountETH(amount);
   };
 
   const connect = async () => {
@@ -34,27 +30,14 @@ function App() {
     }
   };
 
-  function listenerForTxMine(txResponse, provider) {
-    console.log(`Mining ${txResponse.hash}..`);
-    return new Promise((resolve, reject) => {
-      provider.once(txResponse.hash, (txReceipt) => {
-        console.log(`Completed with ${txReceipt.confirmations} confirmations`);
-        resolve();
-      });
-    });
-  }
-
   return (
-    <>
+    <div>
       {connectedState !== "Connet Wallet" ? (
         <>
           <p className="m-6">{connectedState}</p>
-          <button
-            className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
-            onClick={add}
-          >
-            Add Liquidity
-          </button>
+          <PoolIdInput getPoolId={getPoolId} />
+          <AmountETHInput getAmountETH={getAmountETH} />
+          <FunctionButtonsGroup poolId={poolId} amountETH={amountETH} />
         </>
       ) : (
         <button
@@ -64,7 +47,7 @@ function App() {
           {connectedState}
         </button>
       )}
-    </>
+    </div>
   );
 }
 

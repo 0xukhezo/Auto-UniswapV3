@@ -22,6 +22,7 @@ async function main() {
   const wallet = new ethers.Wallet(WALLET_SECRET);
   const connectedWallet = wallet.connect(provider);
 
+  // 35733 36238 36208 36086 36087 36088 36089 36090
   await nonFungiblePositionManagerContract
     .connect(connectedWallet)
     .positions(

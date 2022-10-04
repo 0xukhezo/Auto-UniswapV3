@@ -7,12 +7,13 @@ const {
 const {
   abi: INonfungiblePositionManagerABI,
 } = require("@uniswap/v3-periphery/artifacts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json");
-const ERC20ABI = require("./abi.json");
+const ERC20ABI = require("../Abis/abiAddLiquidity.json");
 
 require("dotenv").config();
-const INFURA_URL_TESTNET = process.env.INFURA_URL_TESTNET;
-const WALLET_ADDRESS = process.env.WALLET_ADDRESS;
-const WALLET_SECRET = process.env.WALLET_SECRET;
+
+const INFURA_URL_TESTNET = process.env.REACT_APP_INFURA_URL_TESTNET;
+const WALLET_ADDRESS = process.env.REACT_APP_WALLET_ADDRESS;
+const WALLET_SECRET = process.env.REACT_APP_WALLET_SECRET;
 
 const poolAddress = "0x07A4f63f643fE39261140DF5E613b9469eccEC86"; // UNI/WETH on Goerli
 const positionManagerAddress = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"; // NonfungiblePositionManager
@@ -38,13 +39,14 @@ const nonfungiblePositionManagerContract = new ethers.Contract(
   INonfungiblePositionManagerABI,
   provider
 );
+
 const poolContract = new ethers.Contract(
   poolAddress,
   IUniswapV3PoolABI,
   provider
 );
 
-async function getPoolData(poolContract) {
+const getPoolData = async (poolContract) => {
   const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
     poolContract.tickSpacing(),
     poolContract.fee(),
@@ -59,9 +61,9 @@ async function getPoolData(poolContract) {
     sqrtPriceX96: slot0[0],
     tick: slot0[1],
   };
-}
+};
 
-async function main() {
+const addLiquidity = async () => {
   const poolData = await getPoolData(poolContract);
 
   const WETH_UNI_POOL = new Pool(
@@ -102,7 +104,7 @@ async function main() {
     position.mintAmounts;
   // mintAmountsWithSlippage
 
-  params = {
+  const params = {
     token0: address0,
     token1: address1,
     fee: poolData.fee,
@@ -112,8 +114,8 @@ async function main() {
     tickUpper:
       nearestUsableTick(poolData.tick, poolData.tickSpacing) +
       poolData.tickSpacing * 2,
-    amount0Desired: ethers.utils.parseUnits("0.05", 18).toString(), // Cantidad del primer token que se va a depositar
-    amount1Desired: ethers.utils.parseUnits("0.05", 18).toString(),
+    amount0Desired: ethers.utils.parseUnits("0.001", 18).toString(), // Cantidad del primer token que se va a depositar
+    amount1Desired: ethers.utils.parseUnits("0.001", 18).toString(),
     amount0Min: amount0Desired.toString(),
     amount1Min: amount1Desired.toString(),
     recipient: WALLET_ADDRESS,
@@ -124,8 +126,8 @@ async function main() {
     .connect(connectedWallet)
     .mint(params, { gasLimit: ethers.utils.hexlify(1000000) })
     .then((res) => {
-      console.log(res);
+      console.log("Adding", res);
     });
-}
+};
 
-main();
+export default addLiquidity;

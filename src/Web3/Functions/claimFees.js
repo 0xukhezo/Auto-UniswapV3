@@ -4,13 +4,13 @@ const {
 } = require("@uniswap/v3-periphery/artifacts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json");
 
 require("dotenv").config();
-const INFURA_URL_TESTNET = process.env.INFURA_URL_TESTNET;
-const WALLET_ADDRESS = process.env.WALLET_ADDRESS;
-const WALLET_SECRET = process.env.WALLET_SECRET;
+const INFURA_URL_TESTNET = process.env.REACT_APP_INFURA_URL_TESTNET;
+const WALLET_ADDRESS = process.env.REACT_APP_WALLET_ADDRESS;
+const WALLET_SECRET = process.env.REACT_APP_WALLET_SECRET;
 
 const positionManagerAddress = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"; // NonfungiblePositionManager
 
-async function main() {
+async function claimFees() {
   const provider = new ethers.providers.JsonRpcProvider(INFURA_URL_TESTNET);
 
   const nonFungiblePositionManagerContract = new ethers.Contract(
@@ -26,11 +26,11 @@ async function main() {
   await nonFungiblePositionManagerContract
     .connect(connectedWallet)
     .positions(
-      "36120" //  tokenId Pool
+      "36218" //  tokenId Pool
     )
     .then((res) => {
       params = {
-        tokenId: 36120, // tokenId Pool
+        tokenId: 36218, // tokenId Pool
         recipient: WALLET_ADDRESS,
         amount0Max: ethers.utils.parseUnits("10", 18),
         amount1Max: ethers.utils.parseUnits("10", 18),
@@ -40,9 +40,9 @@ async function main() {
         .connect(connectedWallet)
         .collect(params, { gasLimit: ethers.utils.hexlify(1000000) })
         .then((res2) => {
-          console.log("Removing", res2);
+          console.log("Claiming", res2);
         });
     });
 }
 
-main();
+module.exports = claimFees();

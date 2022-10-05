@@ -4,6 +4,9 @@ import { ethers } from "ethers";
 import addLiquidity from "../../Web3/Functions/addLiquidity";
 import removeLiquidity from "../../Web3/Functions/removeLiquidity";
 import claimFees from "../../Web3/Functions/claimFees";
+import swapETH from "../../Web3/Functions/swap";
+import pool from "../../Web3/Functions/getPool";
+
 import listenerForTxMine from "../../Web3/Helpers/listener";
 import abiBalance from "../../Web3/Abis/abiBalance.json";
 
@@ -60,6 +63,28 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
         const txResponse = await claimFees(poolId);
         await listenerForTxMine(txResponse, provider);
         console.log("Claim Done");
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const swap = async () => {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const txResponse = await swapETH();
+        await listenerForTxMine(txResponse, provider);
+        console.log("Swap Done");
+      } catch (error) {
+        console.log("Swap Error", error);
+      }
+    }
+  };
+
+  const getPool = async () => {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        await pool();
       } catch (error) {
         console.log(error);
       }
@@ -136,9 +161,21 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
       </button>
       <button
         className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
+        onClick={swap}
+      >
+        Swap WETH
+      </button>
+      <button
+        className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
         onClick={balance}
       >
         Get Balance
+      </button>
+      <button
+        className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
+        onClick={getPool}
+      >
+        Get Pool
       </button>
     </div>
   );

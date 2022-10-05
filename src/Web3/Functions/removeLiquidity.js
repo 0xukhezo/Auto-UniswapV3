@@ -4,28 +4,23 @@ const {
 } = require("@uniswap/v3-periphery/artifacts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json");
 
 require("dotenv").config();
-const INFURA_URL_TESTNET = process.env.REACT_APP_INFURA_URL_TESTNET;
-const WALLET_SECRET = process.env.REACT_APP_WALLET_SECRET;
 
 const positionManagerAddress = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"; // NonfungiblePositionManager
 
 async function removeLiquidity(poolIdToRemove) {
-  const provider = new ethers.providers.JsonRpcProvider(INFURA_URL_TESTNET);
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
 
   const nonFungiblePositionManagerContract = new ethers.Contract(
     positionManagerAddress,
     INonfungiblePositionManagerABI,
-    provider
+    signer
   );
-
-  const wallet = new ethers.Wallet(WALLET_SECRET);
-  const connectedWallet = wallet.connect(provider);
 
   let response;
   let liquidityRemove;
 
   await nonFungiblePositionManagerContract
-    .connect(connectedWallet)
     .positions(
       poolIdToRemove.toString() // tokenId Pool
     )
@@ -44,7 +39,6 @@ async function removeLiquidity(poolIdToRemove) {
   };
 
   await nonFungiblePositionManagerContract
-    .connect(connectedWallet)
     .decreaseLiquidity(params, { gasLimit: ethers.utils.hexlify(1000000) })
     .then((res) => {
       response = res;

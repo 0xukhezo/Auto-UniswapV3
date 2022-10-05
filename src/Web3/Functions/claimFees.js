@@ -4,28 +4,24 @@ const {
 } = require("@uniswap/v3-periphery/artifacts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json");
 
 require("dotenv").config();
-const INFURA_URL_TESTNET = process.env.REACT_APP_INFURA_URL_TESTNET;
 const WALLET_ADDRESS = process.env.REACT_APP_WALLET_ADDRESS;
-const WALLET_SECRET = process.env.REACT_APP_WALLET_SECRET;
 
 const positionManagerAddress = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"; // NonfungiblePositionManager
 
 async function claimFees(poolIdToClaim) {
-  const provider = new ethers.providers.JsonRpcProvider(INFURA_URL_TESTNET);
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
 
   const nonFungiblePositionManagerContract = new ethers.Contract(
     positionManagerAddress,
     INonfungiblePositionManagerABI,
-    provider
+    signer
   );
-
-  const wallet = new ethers.Wallet(WALLET_SECRET);
-  const connectedWallet = wallet.connect(provider);
 
   let response;
 
   // 35733 36238 36208 36086 36087 36088 36089 36090
-  await nonFungiblePositionManagerContract.connect(connectedWallet).positions(
+  await nonFungiblePositionManagerContract.positions(
     poolIdToClaim.toString() //  tokenId Pool
   );
 
@@ -37,7 +33,6 @@ async function claimFees(poolIdToClaim) {
   };
 
   await nonFungiblePositionManagerContract
-    .connect(connectedWallet)
     .collect(params, { gasLimit: ethers.utils.hexlify(1000000) })
     .then((res) => {
       response = res;

@@ -14,7 +14,7 @@ function AmountETHInput({ getAmountETH }) {
           min="1"
           pattern="^[0-9]+"
           onChange={(e) => handleChange(e)}
-          className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
+          className="p-2 border-solid border-indigo-600 border-2 m-6 rounded-md w-24"
         />
       </div>
     </div>

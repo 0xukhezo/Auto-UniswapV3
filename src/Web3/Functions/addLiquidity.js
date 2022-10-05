@@ -11,24 +11,23 @@ const ERC20ABI = require("../Abis/abiAddLiquidity.json");
 
 require("dotenv").config();
 
-const INFURA_URL_TESTNET = process.env.REACT_APP_INFURA_URL_TESTNET;
 const WALLET_ADDRESS = process.env.REACT_APP_WALLET_ADDRESS;
-const WALLET_SECRET = process.env.REACT_APP_WALLET_SECRET;
 
-const poolAddress = "0x07A4f63f643fE39261140DF5E613b9469eccEC86"; // UNI/WETH on Goerli
+const poolAddress = "0xfAe941346Ac34908b8D7d000f86056A18049146E"; // UNI/WETH on Goerli
 const positionManagerAddress = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"; // NonfungiblePositionManager
 
-const provider = new ethers.providers.JsonRpcProvider(INFURA_URL_TESTNET);
+const provider = new ethers.providers.Web3Provider(window.ethereum);
+const signer = provider.getSigner();
 
-const name0 = "Uniswap Token";
-const symbol0 = "UNI";
+const name0 = "Wrapped Ether";
+const symbol0 = "WETH";
 const decimals0 = 18;
-const address0 = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984";
+const address0 = "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6";
 
-const name1 = "Wrapped Ether";
-const symbol1 = "WETH";
+const name1 = "USD Coin";
+const symbol1 = "USDC";
 const decimals1 = 18;
-const address1 = "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6";
+const address1 = "0x07865c6e87b9f70255377e024ace6630c1eaa37f";
 
 const chainId = 5; // Goerli
 const WethToken = new Token(chainId, address0, decimals0, symbol0, name0);
@@ -37,13 +36,13 @@ const UniToken = new Token(chainId, address1, decimals1, symbol1, name1);
 const nonfungiblePositionManagerContract = new ethers.Contract(
   positionManagerAddress,
   INonfungiblePositionManagerABI,
-  provider
+  signer
 );
 
 const poolContract = new ethers.Contract(
   poolAddress,
   IUniswapV3PoolABI,
-  provider
+  signer
 );
 
 const getPoolData = async (poolContract) => {
@@ -86,19 +85,12 @@ const addLiquidity = async (amountETH) => {
       poolData.tickSpacing * 2,
   });
 
-  const wallet = new ethers.Wallet(WALLET_SECRET);
-  const connectedWallet = wallet.connect(provider);
-
   const approvalAmount = ethers.utils.parseUnits("10", 18).toString();
 
-  const tokenContract0 = new ethers.Contract(address0, ERC20ABI, provider);
-  await tokenContract0
-    .connect(connectedWallet)
-    .approve(positionManagerAddress, approvalAmount);
-  const tokenContract1 = new ethers.Contract(address1, ERC20ABI, provider);
-  await tokenContract1
-    .connect(connectedWallet)
-    .approve(positionManagerAddress, approvalAmount);
+  const tokenContract0 = new ethers.Contract(address0, ERC20ABI, signer);
+  await tokenContract0.approve(positionManagerAddress, approvalAmount);
+  const tokenContract1 = new ethers.Contract(address1, ERC20ABI, signer);
+  await tokenContract1.approve(positionManagerAddress, approvalAmount);
 
   const { amount0: amount0Desired, amount1: amount1Desired } =
     position.mintAmounts;
@@ -129,7 +121,6 @@ const addLiquidity = async (amountETH) => {
   let response;
 
   await nonfungiblePositionManagerContract
-    .connect(connectedWallet)
     .mint(params, { gasLimit: ethers.utils.hexlify(1000000) })
     .then((res) => {
       response = res;

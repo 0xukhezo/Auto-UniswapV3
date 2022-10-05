@@ -24,7 +24,7 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
     }
   };
 
-  const remove = async () => {
+  const close = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
         let txResponse = await removeLiquidity(poolId);
@@ -33,6 +33,18 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
         txResponse = await claimFees(poolId);
         await listenerForTxMine(txResponse, provider);
         console.log("Claim Done");
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const remove = async () => {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        let txResponse = await removeLiquidity(poolId);
+        await listenerForTxMine(txResponse, provider);
+        console.log("Remove Done");
       } catch (error) {
         console.log(error);
       }
@@ -53,26 +65,39 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
 
   return (
     <div>
-      {" "}
+      {poolId !== undefined ? (
+        <>
+          {" "}
+          <button
+            className="p-3 border-solid border-indigo-600 border-2 mx-6 rounded-md disabled:opacity-75 p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
+            onClick={close}
+            disabled={poolId !== undefined ? false : true}
+          >
+            Close Position
+          </button>
+          <button
+            className="p-3 border-solid border-indigo-600 border-2 mx-6 rounded-md disabled:opacity-75 p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
+            onClick={remove}
+            disabled={poolId !== undefined ? false : true}
+          >
+            Remove Liquidity
+          </button>
+          <button
+            className="p-3 border-solid border-indigo-600 border-2 mx-6 rounded-md disabled:opacity-75 p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
+            onClick={claim}
+            disabled={poolId !== undefined ? false : true}
+          >
+            Claim Fees
+          </button>
+        </>
+      ) : (
+        <></>
+      )}
       <button
         className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
         onClick={add}
       >
         Add Liquidity
-      </button>
-      <button
-        className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md disabled:opacity-75 p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
-        onClick={remove}
-        disabled={poolId !== undefined ? false : true}
-      >
-        Remove Liquidity
-      </button>
-      <button
-        className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md disabled:opacity-75 p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
-        onClick={claim}
-        disabled={poolId !== undefined ? false : true}
-      >
-        Claim Fees
       </button>
     </div>
   );

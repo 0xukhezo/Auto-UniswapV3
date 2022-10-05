@@ -7,16 +7,16 @@ import claimFees from "../../Web3/Functions/claimFees";
 import listenerForTxMine from "../../Web3/Helpers/listener";
 
 require("dotenv").config();
-const INFURA_URL_TESTNET = process.env.REACT_APP_INFURA_URL_TESTNET;
 
 function FunctionButtonsGroup({ poolId, amountETH }) {
-  const provider = new ethers.providers.JsonRpcProvider(INFURA_URL_TESTNET);
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
 
   const add = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
         const txResponse = await addLiquidity(amountETH);
-        await listenerForTxMine(txResponse, provider);
+        await listenerForTxMine(txResponse, signer);
         console.log("Adding Done");
       } catch (error) {
         console.log(error);
@@ -28,10 +28,10 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
     if (typeof window.ethereum !== "undefined") {
       try {
         let txResponse = await removeLiquidity(poolId);
-        await listenerForTxMine(txResponse, provider);
+        await listenerForTxMine(txResponse, signer);
         console.log("Remove Done");
         txResponse = await claimFees(poolId);
-        await listenerForTxMine(txResponse, provider);
+        await listenerForTxMine(txResponse, signer);
         console.log("Claim Done");
       } catch (error) {
         console.log(error);
@@ -43,7 +43,7 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
     if (typeof window.ethereum !== "undefined") {
       try {
         let txResponse = await removeLiquidity(poolId);
-        await listenerForTxMine(txResponse, provider);
+        await listenerForTxMine(txResponse, signer);
         console.log("Remove Done");
       } catch (error) {
         console.log(error);
@@ -55,7 +55,7 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
     if (typeof window.ethereum !== "undefined") {
       try {
         const txResponse = await claimFees(poolId);
-        await listenerForTxMine(txResponse, provider);
+        await listenerForTxMine(txResponse, signer);
         console.log("Claim Done");
       } catch (error) {
         console.log(error);

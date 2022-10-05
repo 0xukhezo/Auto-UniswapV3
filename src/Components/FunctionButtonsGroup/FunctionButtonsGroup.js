@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
 
 import addLiquidity from "../../Web3/Functions/addLiquidity";
@@ -12,17 +12,25 @@ import abiBalance from "../../Web3/Abis/abiBalance.json";
 
 require("dotenv").config();
 
-function FunctionButtonsGroup({ poolId, amountETH }) {
+function FunctionButtonsGroup({ poolId, amountETH, amountToSwap }) {
   const [balanceUsdcWeth, setBalanceUsdcWeth] = useState([]);
   const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-  console.log(balanceUsdcWeth);
 
   const add = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
-        const txResponse = await addLiquidity(amountETH);
-        await listenerForTxMine(txResponse, provider);
+        if (balanceUsdcWeth[1] < amountETH) {
+          const balanceToSwap =
+            amountETH - balanceUsdcWeth[1] + ethers.utils.parseEther("0.01");
+          let txResponse = await swapETH(balanceToSwap);
+          await listenerForTxMine(txResponse, provider);
+          txResponse = await addLiquidity(amountETH);
+          await listenerForTxMine(txResponse, provider);
+        } else {
+          const txResponse = await addLiquidity(amountETH);
+          await listenerForTxMine(txResponse, provider);
+        }
+
         console.log("Adding Done");
       } catch (error) {
         console.log(error);
@@ -72,11 +80,11 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
   const swap = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
-        const txResponse = await swapETH();
+        const txResponse = await swapETH(amountToSwap);
         await listenerForTxMine(txResponse, provider);
         console.log("Swap Done");
       } catch (error) {
-        console.log("Swap Error", error);
+        console.log(error);
       }
     }
   };
@@ -122,6 +130,10 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
       setBalanceUsdcWeth([balanceUSDC, balanceWETH]);
     }
   };
+
+  useEffect(() => {
+    balance();
+  }, []);
 
   return (
     <div>

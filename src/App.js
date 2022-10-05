@@ -2,14 +2,20 @@ import React, { useState } from "react";
 import AmountETHInput from "./Components/AmountETHInput/AmountETHInput";
 import FunctionButtonsGroup from "./Components/FunctionButtonsGroup/FunctionButtonsGroup";
 import PoolIdInput from "./Components/PoolIdInput/PoolIdInput";
+import SwapInput from "./Components/SwapInput/SwapInput";
 
 function App() {
   const [connectedState, setConnectedState] = useState("Connet Wallet");
   const [poolId, setPoolId] = useState(undefined);
+  const [amountToSwap, setAmountToSwap] = useState(0);
   const [amountETH, setAmountETH] = useState(0);
 
   let getPoolId = (id) => {
     setPoolId(id);
+  };
+
+  let getAmountToSwap = (amountSwap) => {
+    setAmountToSwap(amountSwap);
   };
 
   let getAmountETH = (amount) => {
@@ -41,11 +47,14 @@ function App() {
           </div>
 
           <div className="mx-12 border-solid border-indigo-600 border-2 rounded-lg align-items-center">
-            <div className="grid gap-4 grid-cols-2 grid-rows-2">
-              <PoolIdInput getPoolId={getPoolId} />
-              <AmountETHInput getAmountETH={getAmountETH} />
-              <FunctionButtonsGroup poolId={poolId} amountETH={amountETH} />
-            </div>
+            <PoolIdInput getPoolId={getPoolId} />
+            <AmountETHInput getAmountETH={getAmountETH} />
+            <SwapInput getAmountToSwap={getAmountToSwap} />
+            <FunctionButtonsGroup
+              poolId={poolId}
+              amountETH={amountETH}
+              amountToSwap={amountToSwap}
+            />
           </div>
         </>
       ) : (

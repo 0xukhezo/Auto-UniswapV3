@@ -1,22 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 import { ethers } from "ethers";
 
 import addLiquidity from "../../Web3/Functions/addLiquidity";
 import removeLiquidity from "../../Web3/Functions/removeLiquidity";
 import claimFees from "../../Web3/Functions/claimFees";
 import listenerForTxMine from "../../Web3/Helpers/listener";
+import abiBalance from "../../Web3/Abis/abiBalance.json";
 
 require("dotenv").config();
 
 function FunctionButtonsGroup({ poolId, amountETH }) {
+  const [balanceUsdcWeth, setBalanceUsdcWeth] = useState([]);
   const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner();
+
+  console.log(balanceUsdcWeth);
 
   const add = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
         const txResponse = await addLiquidity(amountETH);
-        await listenerForTxMine(txResponse, signer);
+        await listenerForTxMine(txResponse, provider);
         console.log("Adding Done");
       } catch (error) {
         console.log(error);
@@ -28,10 +31,10 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
     if (typeof window.ethereum !== "undefined") {
       try {
         let txResponse = await removeLiquidity(poolId);
-        await listenerForTxMine(txResponse, signer);
+        await listenerForTxMine(txResponse, provider);
         console.log("Remove Done");
         txResponse = await claimFees(poolId);
-        await listenerForTxMine(txResponse, signer);
+        await listenerForTxMine(txResponse, provider);
         console.log("Claim Done");
       } catch (error) {
         console.log(error);
@@ -43,7 +46,7 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
     if (typeof window.ethereum !== "undefined") {
       try {
         let txResponse = await removeLiquidity(poolId);
-        await listenerForTxMine(txResponse, signer);
+        await listenerForTxMine(txResponse, provider);
         console.log("Remove Done");
       } catch (error) {
         console.log(error);
@@ -55,11 +58,43 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
     if (typeof window.ethereum !== "undefined") {
       try {
         const txResponse = await claimFees(poolId);
-        await listenerForTxMine(txResponse, signer);
+        await listenerForTxMine(txResponse, provider);
         console.log("Claim Done");
       } catch (error) {
         console.log(error);
       }
+    }
+  };
+
+  const balance = async () => {
+    if (typeof window.ethereum != "undefined") {
+      const contractAddressUSDC = "0x07865c6e87b9f70255377e024ace6630c1eaa37f"; // address of the token contract
+      const contractAddressWETH = "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"; // address of the token contract
+      const tokenUSDC = new ethers.Contract(
+        contractAddressUSDC,
+        abiBalance,
+        provider
+      );
+      const tokenWETH = new ethers.Contract(
+        contractAddressWETH,
+        abiBalance,
+        provider
+      );
+      const balanceUSDC = (
+        (
+          await tokenUSDC.balanceOf(
+            "0xa8EC796eE75B04af1223445c587588181CEb56CD"
+          )
+        ).toString() / 1000000
+      ).toString();
+      const balanceWETH = ethers.utils
+        .formatEther(
+          await tokenWETH.balanceOf(
+            "0xa8EC796eE75B04af1223445c587588181CEb56CD"
+          )
+        )
+        .toString();
+      setBalanceUsdcWeth([balanceUSDC, balanceWETH]);
     }
   };
 
@@ -98,6 +133,12 @@ function FunctionButtonsGroup({ poolId, amountETH }) {
         onClick={add}
       >
         Add Liquidity
+      </button>
+      <button
+        className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
+        onClick={balance}
+      >
+        Get Balance
       </button>
     </div>
   );

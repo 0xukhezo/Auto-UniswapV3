@@ -9,11 +9,12 @@ const {
 } = require("@uniswap/v3-periphery/artifacts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json");
 const ERC20ABI = require("../Abis/abiAddLiquidity.json");
 const {
-  constantWETH,
-  constantUNI,
-  poolAddressWethUni,
+  chainId,
   positionManagerAddress,
+  poolAddressWethUni,
   WALLET_ADDRESS,
+  constantUNI,
+  constantWETH,
 } = require("../../Constants/Constants");
 
 require("dotenv").config();
@@ -21,14 +22,6 @@ require("dotenv").config();
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 const signer = provider.getSigner();
 
-const chainId = 5; // Goerli
-const WethToken = new Token(
-  chainId,
-  constantWETH.address,
-  constantWETH.decimals,
-  constantWETH.symbol,
-  constantWETH.name
-);
 const UniToken = new Token(
   chainId,
   constantUNI.address,
@@ -36,20 +29,26 @@ const UniToken = new Token(
   constantUNI.symbol,
   constantUNI.name
 );
+const WethToken = new Token(
+  chainId,
+  constantWETH.address,
+  constantWETH.decimals,
+  constantWETH.symbol,
+  constantWETH.name
+);
 
 const nonfungiblePositionManagerContract = new ethers.Contract(
   positionManagerAddress,
   INonfungiblePositionManagerABI,
   signer
 );
-
 const poolContract = new ethers.Contract(
   poolAddressWethUni,
   IUniswapV3PoolABI,
   signer
 );
 
-const getPoolData = async (poolContract) => {
+async function getPoolData(poolContract) {
   const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
     poolContract.tickSpacing(),
     poolContract.fee(),
@@ -64,9 +63,10 @@ const getPoolData = async (poolContract) => {
     sqrtPriceX96: slot0[0],
     tick: slot0[1],
   };
-};
+}
 
-const addLiquidity = async (amountETH) => {
+async function addLiquidity(amountETH, ratio) {
+  const amountIn = amountETH * ratio;
   const poolData = await getPoolData(poolContract);
 
   const WETH_UNI_POOL = new Pool(
@@ -90,15 +90,14 @@ const addLiquidity = async (amountETH) => {
   });
 
   const approvalAmount = ethers.utils.parseUnits("10", 18).toString();
-
   const tokenContract0 = new ethers.Contract(
-    constantWETH.address,
+    constantUNI.address,
     ERC20ABI,
     signer
   );
   await tokenContract0.approve(positionManagerAddress, approvalAmount);
   const tokenContract1 = new ethers.Contract(
-    constantUNI.address,
+    constantWETH.address,
     ERC20ABI,
     signer
   );
@@ -109,8 +108,8 @@ const addLiquidity = async (amountETH) => {
   // mintAmountsWithSlippage
 
   const params = {
-    token0: constantWETH.address,
-    token1: constantUNI.address,
+    token0: constantUNI.address,
+    token1: constantWETH.address,
     fee: poolData.fee,
     tickLower:
       nearestUsableTick(poolData.tick, poolData.tickSpacing) -
@@ -118,12 +117,8 @@ const addLiquidity = async (amountETH) => {
     tickUpper:
       nearestUsableTick(poolData.tick, poolData.tickSpacing) +
       poolData.tickSpacing * 2,
-    amount0Desired: ethers.utils
-      .parseUnits(amountETH.toString(), 18)
-      .toString(), // Cantidad del primer token que se va a depositar
-    amount1Desired: ethers.utils
-      .parseUnits(amountETH.toString(), 18)
-      .toString(),
+    amount0Desired: ethers.utils.parseEther(amountIn.toString()),
+    amount1Desired: ethers.utils.parseEther(amountIn.toString()),
     amount0Min: amount0Desired.toString(),
     amount1Min: amount1Desired.toString(),
     recipient: WALLET_ADDRESS,
@@ -135,10 +130,10 @@ const addLiquidity = async (amountETH) => {
   await nonfungiblePositionManagerContract
     .mint(params, { gasLimit: ethers.utils.hexlify(1000000) })
     .then((res) => {
+      console.log(res);
       response = res;
     });
-
   return response;
-};
+}
 
 export default addLiquidity;

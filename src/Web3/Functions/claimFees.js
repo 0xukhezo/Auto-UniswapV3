@@ -4,9 +4,10 @@ const {
 } = require("@uniswap/v3-periphery/artifacts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json");
 
 require("dotenv").config();
-const WALLET_ADDRESS = process.env.REACT_APP_WALLET_ADDRESS;
-
-const positionManagerAddress = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"; // NonfungiblePositionManager
+const {
+  positionManagerAddress,
+  WALLET_ADDRESS,
+} = require("../../Constants/Constants");
 
 async function claimFees(poolIdToClaim) {
   const provider = new ethers.providers.Web3Provider(window.ethereum);

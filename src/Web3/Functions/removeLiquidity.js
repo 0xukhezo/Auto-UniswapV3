@@ -5,7 +5,7 @@ const {
 
 require("dotenv").config();
 
-const positionManagerAddress = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"; // NonfungiblePositionManager
+const { positionManagerAddress } = require("../../Constants/Constants");
 
 async function removeLiquidity(poolIdToRemove) {
   const provider = new ethers.providers.Web3Provider(window.ethereum);

@@ -10,27 +10,36 @@ import pool from "../../Web3/Functions/getPool";
 import listenerForTxMine from "../../Web3/Helpers/listener";
 import abiBalance from "../../Web3/Abis/abiBalance.json";
 
+import {
+  WALLET_ADDRESS,
+  constantWETH,
+  constantUNI,
+} from "../../Constants/Constants";
+
 require("dotenv").config();
 
 function FunctionButtonsGroup({ poolId, amountETH, amountToSwap }) {
-  const [balanceUsdcWeth, setBalanceUsdcWeth] = useState([]);
+  const [balanceUniWeth, setBalanceUniWeth] = useState([]);
   const provider = new ethers.providers.Web3Provider(window.ethereum);
+  console.log(balanceUniWeth);
+  const ratio = 0.01099 / 0.008132;
 
   const add = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
-        if (balanceUsdcWeth[1] < amountETH) {
-          const balanceToSwap =
-            amountETH - balanceUsdcWeth[1] + ethers.utils.parseEther("0.01");
-          let txResponse = await swapETH(balanceToSwap);
+        // The ETH amount is smaller than UNI
+        // needs to swap UNI for ETH
+        if (balanceUniWeth[1] < amountETH) {
+          const balanceToSwapETH = amountETH - balanceUniWeth[1];
+          let txResponse = await swapETH(balanceToSwapETH, 0, ratio);
           await listenerForTxMine(txResponse, provider);
+          console.log("Swapping Done");
           txResponse = await addLiquidity(amountETH);
           await listenerForTxMine(txResponse, provider);
         } else {
-          const txResponse = await addLiquidity(amountETH);
+          const txResponse = await addLiquidity(amountETH, ratio);
           await listenerForTxMine(txResponse, provider);
         }
-
         console.log("Adding Done");
       } catch (error) {
         console.log(error);
@@ -80,7 +89,7 @@ function FunctionButtonsGroup({ poolId, amountETH, amountToSwap }) {
   const swap = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
-        const txResponse = await swapETH(amountToSwap);
+        const txResponse = await swapETH(amountToSwap, 1, ratio);
         await listenerForTxMine(txResponse, provider);
         console.log("Swap Done");
       } catch (error) {
@@ -101,33 +110,26 @@ function FunctionButtonsGroup({ poolId, amountETH, amountToSwap }) {
 
   const balance = async () => {
     if (typeof window.ethereum != "undefined") {
-      const contractAddressUSDC = "0x07865c6e87b9f70255377e024ace6630c1eaa37f"; // address of the token contract
-      const contractAddressWETH = "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"; // address of the token contract
-      const tokenUSDC = new ethers.Contract(
-        contractAddressUSDC,
+      const tokenUNI = new ethers.Contract(
+        constantUNI.address,
         abiBalance,
         provider
       );
       const tokenWETH = new ethers.Contract(
-        contractAddressWETH,
+        constantWETH.address,
         abiBalance,
         provider
       );
-      const balanceUSDC = (
-        (
-          await tokenUSDC.balanceOf(
-            "0xa8EC796eE75B04af1223445c587588181CEb56CD"
-          )
-        ).toString() / 1000000
-      ).toString();
-      const balanceWETH = ethers.utils
-        .formatEther(
-          await tokenWETH.balanceOf(
-            "0xa8EC796eE75B04af1223445c587588181CEb56CD"
-          )
+      const balanceUNI = ethers.utils
+        .formatUnits(
+          (await tokenUNI.balanceOf(WALLET_ADDRESS)).toString(),
+          constantUNI.decimals
         )
         .toString();
-      setBalanceUsdcWeth([balanceUSDC, balanceWETH]);
+      const balanceWETH = ethers.utils
+        .formatEther(await tokenWETH.balanceOf(WALLET_ADDRESS))
+        .toString();
+      setBalanceUniWeth([balanceUNI, balanceWETH]);
     }
   };
 

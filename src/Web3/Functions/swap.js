@@ -8,8 +8,8 @@ const {
 const { getPoolImmutables } = require("../Helpers/helpers");
 const {
   constantWETH,
-  constantUNI,
-  poolAddressWethUni,
+  constantUSDC,
+  poolAddressWethUsdc,
   WALLET_ADDRESS,
   swapRouterAddress,
   EthInUsdc,
@@ -25,10 +25,11 @@ const signer = provider.getSigner();
 
 async function swapETH(inputAmount, type, ratio) {
   const poolContract = new ethers.Contract(
-    poolAddressWethUni,
+    poolAddressWethUsdc,
     IUniswapV3PoolABI,
     signer
   );
+
   const immutables = await getPoolImmutables(poolContract);
 
   const swapRouterContract = new ethers.Contract(
@@ -40,10 +41,10 @@ async function swapETH(inputAmount, type, ratio) {
   let params;
 
   const amountIn = ethers.utils.parseUnits(
-    inputAmount.toString(),
-    constantWETH.decimals
+    inputAmount.toFixed(6).toString(),
+    "ether"
   );
-
+  console.log(amountIn);
   if (type === 0) {
     console.log("uni por weth");
 
@@ -59,12 +60,8 @@ async function swapETH(inputAmount, type, ratio) {
       ethUsdc = roundData.answer.toString() / 100000000;
     });
 
-    const balanceToSwapETH = inputAmount * 1.15;
-
-    const unisToSwap = ethers.utils.parseUnits(
-      (ratio * balanceToSwapETH.toFixed(18)).toFixed(18).toString(),
-      constantUNI.decimals
-    );
+    const balanceToSwapETH = inputAmount + 0.055;
+    const unisToSwap = (ratio * balanceToSwapETH).toFixed(18);
 
     params = {
       tokenIn: immutables.token0,
@@ -72,7 +69,10 @@ async function swapETH(inputAmount, type, ratio) {
       fee: immutables.fee,
       recipient: WALLET_ADDRESS,
       deadline: Math.floor(Date.now() / 1000) + 60 * 10,
-      amountIn: unisToSwap,
+      amountIn: ethers.utils.parseUnits(
+        unisToSwap.toString(),
+        constantUSDC.decimals
+      ),
       amountOutMinimum: 0,
       sqrtPriceLimitX96: 0,
     };
@@ -91,7 +91,8 @@ async function swapETH(inputAmount, type, ratio) {
     };
   }
 
-  const approvalAmount = (amountIn * 100000).toString();
+  const approvalAmount = (amountIn * 10000).toString();
+
   const tokenContract0 = new ethers.Contract(
     constantWETH.address,
     ERC20ABI,
@@ -102,7 +103,7 @@ async function swapETH(inputAmount, type, ratio) {
     approvalAmount
   );
   const tokenContract1 = new ethers.Contract(
-    constantUNI.address,
+    constantUSDC.address,
     ERC20ABI,
     signer
   );

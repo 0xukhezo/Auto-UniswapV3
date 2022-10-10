@@ -18,15 +18,22 @@ import {
 
 require("dotenv").config();
 
-function FunctionButtonsGroup({ poolId, amountETH, amountToSwap }) {
+function FunctionButtonsGroup({
+  poolId,
+  amountETH,
+  amountToSwap,
+  lowTickPrice,
+  upTickPrice,
+}) {
   const [balanceUniWeth, setBalanceUniWeth] = useState([]);
   const provider = new ethers.providers.Web3Provider(window.ethereum);
-  console.log(balanceUniWeth);
-  const ratio = 0.01099 / 0.008132;
+
+  const ratio = 138.25;
 
   const add = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
+        console.log(balanceUniWeth[1], amountETH);
         // The ETH amount is smaller than UNI
         // needs to swap UNI for ETH
         if (balanceUniWeth[1] < amountETH) {
@@ -34,10 +41,20 @@ function FunctionButtonsGroup({ poolId, amountETH, amountToSwap }) {
           let txResponse = await swapETH(balanceToSwapETH, 0, ratio);
           await listenerForTxMine(txResponse, provider);
           console.log("Swapping Done");
-          txResponse = await addLiquidity(amountETH);
+          txResponse = await addLiquidity(
+            amountETH,
+            ratio,
+            upTickPrice,
+            lowTickPrice
+          );
           await listenerForTxMine(txResponse, provider);
         } else {
-          const txResponse = await addLiquidity(amountETH, ratio);
+          const txResponse = await addLiquidity(
+            amountETH,
+            ratio,
+            upTickPrice,
+            lowTickPrice
+          );
           await listenerForTxMine(txResponse, provider);
         }
         console.log("Adding Done");

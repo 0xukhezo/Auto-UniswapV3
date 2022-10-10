@@ -3,15 +3,26 @@ import AmountETHInput from "./Components/AmountETHInput/AmountETHInput";
 import FunctionButtonsGroup from "./Components/FunctionButtonsGroup/FunctionButtonsGroup";
 import PoolIdInput from "./Components/PoolIdInput/PoolIdInput";
 import SwapInput from "./Components/SwapInput/SwapInput";
+import TickInput from "./Components/TicksInputs/TicksInputs";
 
 function App() {
   const [connectedState, setConnectedState] = useState("Connet Wallet");
   const [poolId, setPoolId] = useState(undefined);
   const [amountToSwap, setAmountToSwap] = useState(0);
+  const [upTickPrice, setUpTickPrice] = useState(undefined);
+  const [lowTickPrice, setLowTickPrice] = useState(undefined);
   const [amountETH, setAmountETH] = useState(0);
 
   let getPoolId = (id) => {
     setPoolId(id);
+  };
+
+  let getTickLow = (valueLow) => {
+    setLowTickPrice(parseFloat(valueLow));
+  };
+
+  let getTickUp = (valueUp) => {
+    setUpTickPrice(parseFloat(valueUp));
   };
 
   let getAmountToSwap = (amountSwap) => {
@@ -50,10 +61,13 @@ function App() {
             <PoolIdInput getPoolId={getPoolId} />
             <AmountETHInput getAmountETH={getAmountETH} />
             <SwapInput getAmountToSwap={getAmountToSwap} />
+            <TickInput getTickLow={getTickLow} getTickUp={getTickUp} />
             <FunctionButtonsGroup
               poolId={poolId}
               amountETH={amountETH}
               amountToSwap={amountToSwap}
+              upTickPrice={upTickPrice}
+              lowTickPrice={lowTickPrice}
             />
           </div>
         </>

@@ -111,7 +111,10 @@ async function addLiquidity2(amountETH, ratio, upTickPrice, lowTickPrice) {
   const { amount0: amount0Desired, amount1: amount1Desired } =
     position.mintAmounts;
   // mintAmountsWithSlippage
-
+  console.log(amount1Desired.toString());
+  console.log(
+    (ethers.utils.parseEther(amountETH.toString()) * 0.99).toString()
+  );
   const params = {
     token0: constantUSDC.address,
     token1: constantWETH.address,
@@ -123,15 +126,18 @@ async function addLiquidity2(amountETH, ratio, upTickPrice, lowTickPrice) {
       poolData.tickSpacing
     ),
     tickUpper: nearestUsableTick(
-      priceToClosestTick(new Price(UniToken, WethToken, lowTickPrice, 1)) < 0
+      priceToClosestTick(new Price(UniToken, WethToken, upTickPrice, 1)) < 0
         ? priceToClosestTick(new Price(UniToken, WethToken, lowTickPrice, 1))
         : priceToClosestTick(new Price(UniToken, WethToken, upTickPrice, 1)),
       poolData.tickSpacing
     ),
     amount0Desired: ethers.utils.parseEther(amountIn.toString()).toString(),
-    amount1Desired: ethers.utils.parseEther(amountIn.toString()).toString(),
+    amount1Desired: ethers.utils.parseEther(amountETH.toString()).toString(),
     amount0Min: amount0Desired.toString(),
-    amount1Min: amount1Desired.toString(),
+    amount1Min:
+      amount1Desired < ethers.utils.parseEther(amountETH.toString())
+        ? (ethers.utils.parseEther(amountETH.toString()) * 0.999).toString()
+        : amount1Desired.toString(),
     recipient: WALLET_ADDRESS,
     deadline: Math.floor(Date.now() / 1000) + 60 * 10,
   };

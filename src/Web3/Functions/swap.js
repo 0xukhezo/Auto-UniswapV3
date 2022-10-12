@@ -40,11 +40,8 @@ async function swapETH(inputAmount, type, ratio) {
 
   let params;
 
-  const amountIn = ethers.utils.parseUnits(
-    inputAmount.toFixed(6).toString(),
-    "ether"
-  );
-  console.log(amountIn);
+  const amountIn = ethers.utils.parseUnits(inputAmount.toString(), "ether");
+
   if (type === 0) {
     console.log("uni por weth");
 

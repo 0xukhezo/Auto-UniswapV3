@@ -33,7 +33,6 @@ function FunctionButtonsGroup({
   const add = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
-        console.log(balanceUniWeth[1], amountETH);
         // The ETH amount is smaller than UNI
         // needs to swap UNI for ETH
         if (balanceUniWeth[1] < amountETH) {

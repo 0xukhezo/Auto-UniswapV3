@@ -6,6 +6,9 @@ import removeLiquidity from "../../Web3/Functions/removeLiquidity";
 import claimFees from "../../Web3/Functions/claimFees";
 import swapETH from "../../Web3/Functions/swap";
 import pool from "../../Web3/Functions/getPool";
+import gasEstimationClaim from "../../Web3/GasEstimationFunctions/claimGasEstimation";
+import gasEstimationAdd from "../../Web3/GasEstimationFunctions/addGasEstimation";
+import gasEstimationSwap from "../../Web3/GasEstimationFunctions/swapGasEstimation";
 
 import listenerForTxMine from "../../Web3/Helpers/listener";
 import abiBalance from "../../Web3/Abis/abiBalance.json";
@@ -26,6 +29,8 @@ function FunctionButtonsGroup({
   upTickPrice,
 }) {
   const [balanceUniWeth, setBalanceUniWeth] = useState([]);
+  const [estimationGas, setEstimationGas] = useState();
+  const [showGas, setShowGas] = useState(false);
   const provider = new ethers.providers.Web3Provider(window.ethereum);
 
   const ratio = 138.25;
@@ -124,6 +129,47 @@ function FunctionButtonsGroup({
     }
   };
 
+  const getGasEstimationClaim = async () => {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const response = await gasEstimationClaim(poolId);
+        setEstimationGas(response);
+        setShowGas(true);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const getGasEstimationAdd = async () => {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const response = await gasEstimationAdd(
+          amountETH,
+          ratio,
+          upTickPrice,
+          lowTickPrice
+        );
+        setEstimationGas(response);
+        setShowGas(true);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const getGasEstimationSwap = async () => {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const response = await gasEstimationSwap(amountToSwap, 1, ratio);
+        setEstimationGas(response);
+        setShowGas(true);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
   const balance = async () => {
     if (typeof window.ethereum != "undefined") {
       const tokenUNI = new ethers.Contract(
@@ -207,6 +253,30 @@ function FunctionButtonsGroup({
       >
         Get Pool
       </button>
+      <button
+        className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
+        onClick={getGasEstimationClaim}
+      >
+        Get Gas of claim
+      </button>
+      <button
+        className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
+        onClick={getGasEstimationAdd}
+      >
+        Get Gas of add
+      </button>
+      <button
+        className="p-3 border-solid border-indigo-600 border-2 m-6 rounded-md"
+        onClick={getGasEstimationSwap}
+      >
+        Get Gas of swap
+      </button>
+      {showGas && (
+        <>
+          <div>Estimation cost for Claim: {estimationGas} ETH</div>
+          <div>Estimation cost for Add: {estimationGas.add} ETH</div>
+        </>
+      )}
     </div>
   );
 }

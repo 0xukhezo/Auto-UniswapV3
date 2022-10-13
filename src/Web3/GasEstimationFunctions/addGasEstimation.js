@@ -1,4 +1,4 @@
-const { ethers } = require("ethers");
+const { ethers, BigNumber } = require("ethers");
 const { Token, Price } = require("@uniswap/sdk-core");
 const {
   Pool,
@@ -24,35 +24,6 @@ const {
 
 require("dotenv").config();
 
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-const signer = provider.getSigner();
-
-const UniToken = new Token(
-  chainId,
-  constantUSDC.address,
-  constantUSDC.decimals,
-  constantUSDC.symbol,
-  constantUSDC.name
-);
-const WethToken = new Token(
-  chainId,
-  constantWETH.address,
-  constantWETH.decimals,
-  constantWETH.symbol,
-  constantWETH.name
-);
-
-const nonfungiblePositionManagerContract = new ethers.Contract(
-  positionManagerAddress,
-  INonfungiblePositionManagerABI,
-  signer
-);
-const poolContract = new ethers.Contract(
-  poolAddressWethUsdc,
-  IUniswapV3PoolABI,
-  signer
-);
-
 async function getPoolData(poolContract) {
   const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
     poolContract.tickSpacing(),
@@ -70,7 +41,38 @@ async function getPoolData(poolContract) {
   };
 }
 
-async function addLiquidity(amountETH, ratio, upTickPrice, lowTickPrice) {
+async function gasEstimationAdd(amountETH, ratio, upTickPrice, lowTickPrice) {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const gasPrice = ethers.utils.formatEther(await provider.getGasPrice());
+
+  const UniToken = new Token(
+    chainId,
+    constantUSDC.address,
+    constantUSDC.decimals,
+    constantUSDC.symbol,
+    constantUSDC.name
+  );
+
+  const WethToken = new Token(
+    chainId,
+    constantWETH.address,
+    constantWETH.decimals,
+    constantWETH.symbol,
+    constantWETH.name
+  );
+
+  const nonfungiblePositionManagerContract = new ethers.Contract(
+    positionManagerAddress,
+    INonfungiblePositionManagerABI,
+    provider
+  );
+
+  const poolContract = new ethers.Contract(
+    poolAddressWethUsdc,
+    IUniswapV3PoolABI,
+    provider
+  );
+
   const poolData = await getPoolData(poolContract);
   const amountIn = amountETH * ratio;
 
@@ -98,15 +100,24 @@ async function addLiquidity(amountETH, ratio, upTickPrice, lowTickPrice) {
   const tokenContract0 = new ethers.Contract(
     UniToken.address,
     ERC20ABI,
-    signer
+    provider
   );
-  await tokenContract0.approve(positionManagerAddress, approvalAmount);
+
+  const tokenContract0Gas = await tokenContract0.estimateGas.approve(
+    positionManagerAddress,
+    approvalAmount
+  );
+
   const tokenContract1 = new ethers.Contract(
     WethToken.address,
     ERC20ABI,
-    signer
+    provider
   );
-  await tokenContract1.approve(positionManagerAddress, approvalAmount);
+
+  const tokenContract1Gas = await tokenContract1.estimateGas.approve(
+    positionManagerAddress,
+    approvalAmount
+  );
 
   const { amount0: amount0Desired, amount1: amount1Desired } =
     position.mintAmounts;
@@ -136,14 +147,13 @@ async function addLiquidity(amountETH, ratio, upTickPrice, lowTickPrice) {
     deadline: Math.floor(Date.now() / 1000) + 60 * 10,
   };
 
-  let response;
+  const addLiquidityGas =
+    (
+      await nonfungiblePositionManagerContract.estimateGas.mint(params, {
+        gasLimit: 10000000000,
+      })
+    ).toNumber() * gasPrice;
 
-  await nonfungiblePositionManagerContract
-    .mint(params, { gasLimit: ethers.utils.hexlify(1000000) })
-    .then((res) => {
-      response = res;
-    });
-
-  return response;
+  return addLiquidityGas;
 }
-export default addLiquidity;
+export default gasEstimationAdd;
